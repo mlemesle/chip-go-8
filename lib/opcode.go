@@ -5,7 +5,7 @@ import (
 	"math/rand"
 )
 
-func getOpcodeFunc(c *Chip8) error {
+func handleOpcode(c *Chip8) error {
 	if c.opcode == 0x00EE {
 		opcode_00EE(c)
 	} else if c.opcode == 0x00E0 {
@@ -90,7 +90,7 @@ func opcode_00EE(c *Chip8) {
 }
 
 func opcode_00E0(c *Chip8) {
-	c.gfx = [gfxXSize][gfxYSize]uint8{}
+	c.gfx = [gfxSize]uint8{}
 	c.draw = true
 	c.pc = c.pc + 2
 }
@@ -134,12 +134,12 @@ func opcode_5XY0(c *Chip8) {
 }
 
 func opcode_6XNN(c *Chip8) {
-	c.registers[(c.opcode&0x0F00)>>8] = uint8(c.opcode & 0x00FF)
+	c.registers[(c.opcode&0x0F00)>>8] = c.opcode & 0x00FF
 	c.pc += 2
 }
 
 func opcode_7XNN(c *Chip8) {
-	c.registers[(c.opcode&0x0F00)>>8] = c.registers[(c.opcode&0x0F00)>>8] + uint8(c.opcode&0x00FF)
+	c.registers[(c.opcode&0x0F00)>>8] = c.registers[(c.opcode&0x0F00)>>8] + c.opcode&0x00FF
 	c.pc += 2
 }
 
@@ -164,7 +164,7 @@ func opcode_8XY3(c *Chip8) {
 }
 
 func opcode_8XY4(c *Chip8) {
-	var carry byte = 0
+	var carry uint16 = 0
 	if c.registers[(c.opcode&0x00F0)>>4] > 0xFF-c.registers[(c.opcode&0x0F00)>>8] {
 		carry = 1
 	}
@@ -174,7 +174,7 @@ func opcode_8XY4(c *Chip8) {
 }
 
 func opcode_8XY5(c *Chip8) {
-	var carry byte = 1
+	var carry uint16 = 1
 	if c.registers[(c.opcode&0x00F0)>>4] > c.registers[(c.opcode&0x0F00)>>8] {
 		carry = 0
 	}
@@ -190,7 +190,7 @@ func opcode_8XY6(c *Chip8) {
 }
 
 func opcode_8XY7(c *Chip8) {
-	var carry byte = 1
+	var carry uint16 = 1
 	if c.registers[(c.opcode&0x0F00)>>8] > c.registers[(c.opcode&0x00F0)>>4] {
 		carry = 0
 	}
@@ -223,25 +223,25 @@ func opcode_BNNN(c *Chip8) {
 }
 
 func opcode_CXNN(c *Chip8) {
-	c.registers[(c.opcode&0x0F00)>>8] = uint8(rand.Intn(256)) & uint8(c.opcode&0x00FF)
+	c.registers[(c.opcode&0x0F00)>>8] = uint16(rand.Intn(256)) & (c.opcode & 0x00FF)
 	c.pc = c.pc + 2
 }
 
 func opcode_DXYN(c *Chip8) {
 	x := c.registers[(c.opcode&0x0F00)>>8]
 	y := c.registers[(c.opcode&0x00F0)>>4]
-	h := c.opcode & 0x000F
+	height := c.opcode & 0x000F
 	c.registers[0xF] = 0
-	var j uint16
-	var i uint16
-	for j = 0; j < h; j++ {
-		pixel := c.memory[c.i+j]
-		for i = 0; i < 8; i++ {
-			if (pixel & (0x80 >> i)) != 0 {
-				if c.gfx[(y + uint8(j))][x+uint8(i)] == 1 {
+	var yLine uint16
+	var xLine uint16
+	for yLine = 0; yLine < height; yLine++ {
+		pixel := c.memory[c.i+yLine]
+		for xLine = 0; xLine < 8; xLine++ {
+			if (pixel & (0x80 >> xLine)) != 0 {
+				if c.gfx[(x+xLine+((y+yLine)*64))] == 1 {
 					c.registers[0xF] = 1
 				}
-				c.gfx[(y + uint8(j))][x+uint8(i)] ^= 1
+				c.gfx[x+xLine+((y+yLine)*64)] ^= 1
 			}
 		}
 	}
@@ -274,7 +274,7 @@ func opcode_FX0A(c *Chip8) {
 	isPressed := false
 	for i, k := range c.key {
 		if k != 0 {
-			c.registers[(c.opcode&0x0F00)>>8] = uint8(i)
+			c.registers[(c.opcode&0x0F00)>>8] = uint16(i)
 			isPressed = true
 		}
 	}
@@ -295,7 +295,7 @@ func opcode_FX18(c *Chip8) {
 }
 
 func opcode_FX1E(c *Chip8) {
-	var carry byte = 0
+	var carry uint16 = 0
 	if c.i+uint16(c.registers[(c.opcode&0x0F00)>>8]) > 0xFFF {
 		carry = 1
 	}

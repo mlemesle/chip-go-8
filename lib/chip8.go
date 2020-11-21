@@ -9,14 +9,13 @@ const (
 	memorySize    = 4096
 	memoryOffset  = 512
 	registersSize = 16
-	gfxXSize      = 32
-	gfxYSize      = 64
+	gfxSize       = 32 * 64
 	stackSize     = 16
 	keySize       = 16
 	fontSetSize   = 80
 )
 
-var chip8FontSet = [fontSetSize]uint8{
+var chip8FontSet = [fontSetSize]uint16{
 	0xF0, 0x90, 0x90, 0x90, 0xF0, //0
 	0x20, 0x60, 0x20, 0x20, 0x70, //1
 	0xF0, 0x10, 0xF0, 0x80, 0xF0, //2
@@ -37,41 +36,64 @@ var chip8FontSet = [fontSetSize]uint8{
 
 type Chip8 struct {
 	opcode     uint16
-	memory     [memorySize]byte
-	registers  [registersSize]byte
+	memory     [memorySize]uint16
+	registers  [registersSize]uint16
 	i          uint16
 	pc         uint16
-	gfx        [gfxXSize][gfxYSize]uint8
-	delayTimer byte
-	soundTimer byte
+	gfx        [gfxSize]uint8
+	delayTimer uint16
+	soundTimer uint16
 	stack      [stackSize]uint16
 	sp         byte
 	key        [keySize]byte
 	draw       bool
+	width      int32
+	height     int32
 }
 
 type Chip8Emulator interface {
 	Initialize()
+	NeedDraw() bool
+	GetGFX() [gfxSize]uint8
+	SetRegisterUp(index int)
+	SetRegisterDown(index int)
 	LoadMemory(filename string) error
 	EmulateCycle(filename string) error
 }
 
 func (c *Chip8) Initialize() {
 	c.opcode = 0
-	c.memory = [memorySize]byte{}
+	c.memory = [memorySize]uint16{}
 	for i := 0; i < fontSetSize; i++ {
 		c.memory[i] = chip8FontSet[i]
 	}
-	c.registers = [registersSize]byte{}
+	c.registers = [registersSize]uint16{}
 	c.i = 0
 	c.pc = 0x200
-	c.gfx = [gfxXSize][gfxYSize]uint8{}
+	c.gfx = [gfxSize]uint8{}
 	c.delayTimer = 0
 	c.soundTimer = 0
 	c.stack = [stackSize]uint16{}
-	c.sp = 0
+	c.sp = 15
 	c.key = [keySize]byte{}
 	c.draw = false
+	println("Chip8 init")
+}
+
+func (c Chip8) NeedDraw() bool {
+	return c.draw
+}
+
+func (c Chip8) GetGFX() [gfxSize]uint8 {
+	return c.gfx
+}
+
+func (c *Chip8) SetKeyUp(index int) {
+	c.key[index] = 0
+}
+
+func (c *Chip8) SetKeyDown(index int) {
+	c.key[index] = 1
 }
 
 func (c *Chip8) LoadMemory(filename string) error {
@@ -85,7 +107,7 @@ func (c *Chip8) LoadMemory(filename string) error {
 	if err != nil {
 		return err
 	}
-	if stat.Size() > memorySize-512 {
+	if stat.Size() > memorySize-0x200 {
 		return errors.New("File is too big for memory")
 	}
 
@@ -96,15 +118,16 @@ func (c *Chip8) LoadMemory(filename string) error {
 
 	bufferLen := len(fileBuffer)
 	for i := 0; i < bufferLen; i++ {
-		c.memory[i+memoryOffset] = fileBuffer[i]
+		c.memory[i+memoryOffset] = uint16(fileBuffer[i])
 	}
+	println("Memory loaded")
 	return nil
 }
 
 func (c *Chip8) EmulateCycle() error {
 	c.opcode = uint16(c.memory[c.pc]<<8) | uint16(c.memory[c.pc+1])
 
-	opcodeFn, err := getOpcodeFunc(c.opcode)
+	err := handleOpcode(c)
 	if err != nil {
 		return err
 	}
@@ -114,7 +137,7 @@ func (c *Chip8) EmulateCycle() error {
 	}
 	if c.soundTimer > 0 {
 		if c.soundTimer == 1 {
-			// TODO Do beep
+			println("beep")
 		}
 		c.soundTimer--
 	}
