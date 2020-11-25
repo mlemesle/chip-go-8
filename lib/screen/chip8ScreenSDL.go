@@ -1,12 +1,12 @@
-package lib
+package screen
 
 import (
-	// "fmt"
+	"github.com/mlemesle/chip-go-8/lib/emulator"
 	"github.com/veandco/go-sdl2/sdl"
-	// "strings"
 )
 
-type Chip8Screen struct {
+// Chip8ScreenSDL represents a display for the chip8, it uses the SDL library
+type Chip8ScreenSDL struct {
 	window   *sdl.Window
 	renderer *sdl.Renderer
 	w        int32
@@ -14,16 +14,19 @@ type Chip8Screen struct {
 	ratio    int32
 }
 
-type Chip8Scren interface {
-	Init(c *Chip8, w, h, ratio int32) error
-	Destroy()
-	Draw(gfx [gfxSize]uint16) error
-	HandleEvent(c *Chip8) bool
+// NewChip8ScreenSDL creates a new non-initialized Chip8ScreenSDL
+func NewChip8ScreenSDL(w, h, ratio int32) *Chip8ScreenSDL {
+	return &Chip8ScreenSDL{
+		w:     w,
+		h:     h,
+		ratio: ratio,
+	}
 }
 
-func (c8s *Chip8Screen) Init(c *Chip8, w, h, ratio int32) error {
+// Init initializes the given Chip8ScreenSDL
+func (c8s *Chip8ScreenSDL) Init() error {
 	sdl.Init(sdl.INIT_EVERYTHING)
-	window, err := sdl.CreateWindow("Chip 8 emulator", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, 62*ratio, 32*ratio, sdl.WINDOW_SHOWN)
+	window, err := sdl.CreateWindow("Chip 8 emulator", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, c8s.w*c8s.ratio, c8s.h*c8s.ratio, sdl.WINDOW_SHOWN)
 	if err != nil {
 		return err
 	}
@@ -33,18 +36,17 @@ func (c8s *Chip8Screen) Init(c *Chip8, w, h, ratio int32) error {
 	}
 	c8s.window = window
 	c8s.renderer = renderer
-	c8s.w = w
-	c8s.h = h
-	c8s.ratio = ratio
 	return nil
 }
 
-func (c8s *Chip8Screen) Destroy() {
+// Destroy cleans the struct and free the memory
+func (c8s *Chip8ScreenSDL) Destroy() {
 	c8s.renderer.Destroy()
 	c8s.window.Destroy()
 }
 
-func (c8s *Chip8Screen) Draw(gfx [gfxSize]uint8) error {
+// Draw displays the gfx of the Chip8 on the screen
+func (c8s *Chip8ScreenSDL) Draw(c *emulator.Chip8) error {
 	c8s.renderer.SetDrawColor(0, 0, 0, 255)
 	if err := c8s.renderer.Clear(); err != nil {
 		return err
@@ -53,8 +55,7 @@ func (c8s *Chip8Screen) Draw(gfx [gfxSize]uint8) error {
 	var x, y int32
 	for y = 0; y < c8s.h; y++ {
 		for x = 0; x < c8s.w; x++ {
-			// Values of pixel are stored in 1D array of size 64 * 32
-			if gfx[x+y*64] == 0 {
+			if c.GetGFX()[x+y*64] == 0 {
 				continue
 			}
 			c8s.renderer.SetDrawColor(255, 255, 255, 255)
@@ -70,10 +71,12 @@ func (c8s *Chip8Screen) Draw(gfx [gfxSize]uint8) error {
 	}
 
 	c8s.renderer.Present()
+	c.SetDraw(false)
 	return nil
 }
 
-func (c8s *Chip8Screen) HandleEvent(c *Chip8) bool {
+// HandleEvent processes the user's inputs
+func (c8s *Chip8ScreenSDL) HandleEvent(c *emulator.Chip8) bool {
 	// Poll for Quit and Keyboard events
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 		switch et := event.(type) {
