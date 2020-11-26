@@ -3,23 +3,27 @@ package screen
 import (
 	"github.com/mlemesle/chip-go-8/lib/emulator"
 	"github.com/veandco/go-sdl2/sdl"
+	"time"
 )
 
 // Chip8ScreenSDL represents a display for the chip8, it uses the SDL library
 type Chip8ScreenSDL struct {
-	window   *sdl.Window
-	renderer *sdl.Renderer
-	w        int32
-	h        int32
-	ratio    int32
+	durationBetweenFrame time.Duration
+	lastDraw             time.Time
+	window               *sdl.Window
+	renderer             *sdl.Renderer
+	w                    int32
+	h                    int32
+	ratio                int32
 }
 
 // NewChip8ScreenSDL creates a new non-initialized Chip8ScreenSDL
 func NewChip8ScreenSDL(w, h, ratio int32) *Chip8ScreenSDL {
 	return &Chip8ScreenSDL{
-		w:     w,
-		h:     h,
-		ratio: ratio,
+		durationBetweenFrame: time.Duration(time.Second / 60),
+		w:                    w,
+		h:                    h,
+		ratio:                ratio,
 	}
 }
 
@@ -36,6 +40,7 @@ func (c8s *Chip8ScreenSDL) Init() error {
 	}
 	c8s.window = window
 	c8s.renderer = renderer
+	c8s.lastDraw = time.Now()
 	return nil
 }
 
@@ -47,6 +52,11 @@ func (c8s *Chip8ScreenSDL) Destroy() {
 
 // Draw displays the gfx of the Chip8 on the screen
 func (c8s *Chip8ScreenSDL) Draw(c *emulator.Chip8) error {
+	if elapsed := time.Since(c8s.lastDraw); elapsed < c8s.durationBetweenFrame {
+		timeToWait := time.Until(c8s.lastDraw.Add(c8s.durationBetweenFrame - elapsed)).Milliseconds()
+		sdl.Delay(uint32(timeToWait))
+	}
+
 	c8s.renderer.SetDrawColor(0, 0, 0, 255)
 	if err := c8s.renderer.Clear(); err != nil {
 		return err
@@ -72,6 +82,7 @@ func (c8s *Chip8ScreenSDL) Draw(c *emulator.Chip8) error {
 
 	c8s.renderer.Present()
 	c.SetDraw(false)
+	c8s.lastDraw = time.Now()
 	return nil
 }
 
