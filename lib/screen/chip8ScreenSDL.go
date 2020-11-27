@@ -53,8 +53,8 @@ func (c8s *Chip8ScreenSDL) Destroy() {
 // Draw displays the gfx of the Chip8 on the screen
 func (c8s *Chip8ScreenSDL) Draw(c *emulator.Chip8) error {
 	if elapsed := time.Since(c8s.lastDraw); elapsed < c8s.durationBetweenFrame {
-		timeToWait := time.Until(c8s.lastDraw.Add(c8s.durationBetweenFrame - elapsed)).Milliseconds()
-		sdl.Delay(uint32(timeToWait))
+		timeToWait := time.Until(c8s.lastDraw.Add(c8s.durationBetweenFrame - elapsed))
+		time.Sleep(timeToWait)
 	}
 
 	c8s.renderer.SetDrawColor(0, 0, 0, 255)
