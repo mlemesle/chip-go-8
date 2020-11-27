@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"errors"
+	"github.com/mlemesle/chip-go-8/lib/beeper"
 	"os"
 )
 
@@ -45,6 +46,7 @@ type Chip8 struct {
 	gfx        [gfxSize]uint8
 	delayTimer uint8
 	soundTimer uint8
+	beeper     beeper.BeeperInterface
 	stack      [stackSize]uint16
 	sp         byte
 	key        [keySize]byte
@@ -69,7 +71,7 @@ func New() *Chip8 {
 }
 
 // Initialize sets defaults value to all fields of the emulator
-func (c *Chip8) Initialize() {
+func (c *Chip8) Initialize(b beeper.BeeperInterface) {
 	c.opcode = 0
 	c.memory = [memorySize]uint16{}
 	for i := 0; i < fontSetSize; i++ {
@@ -81,6 +83,7 @@ func (c *Chip8) Initialize() {
 	c.gfx = [gfxSize]uint8{}
 	c.delayTimer = 0
 	c.soundTimer = 0
+	c.beeper = b
 	c.stack = [stackSize]uint16{}
 	c.sp = 0
 	c.key = [keySize]byte{}
@@ -154,7 +157,7 @@ func (c *Chip8) EmulateCycle() error {
 	}
 	if c.soundTimer > 0 {
 		if c.soundTimer == 1 {
-			println("beep")
+			c.beeper.Beep()
 		}
 		c.soundTimer--
 	}
