@@ -1,6 +1,6 @@
 # chip-go-8
 
-![Pong game][pong.png]
+![Pong game](https://github.com/mlemesle/chip-go-8/blob/master/pong.png "Pong game")
 
 ## Goal
 
