@@ -1,14 +1,13 @@
 # chip-go-8
-===========
+
+![Pong game][pong.png]
 
 ## Goal
-=======
 
 The goal of this project is to improve my Go skills and to enter into the world of emulation.
 So there it is, my Chip8 emulator !
 
 ## Prerequisite
-===============
 
 To run this project you need :
 * Go, at least v1.14 (you can install it from [here](https://golang.org/doc/install "Golang install page"))
@@ -17,22 +16,20 @@ To run this project you need :
 If you're all set, you can now install this project !
 
 ## Installation
-===============
 
 To retrieve this project, use
 
-```bash
+```
 go get -u github.com/mlemesle/chip-go-8
 ```
 
 Now go to the project's root directory (where main.go is located) and run `go build` to build the project and generate an executable. You now have chip-go-8 executable file in your current directory !
 
 ## Running the emulator
-=========================
 
 To launch the emulator, simply run 
 
-```bash
+```
 ./chip-go-8
 ```
 
@@ -43,7 +40,7 @@ It will run the emulator with default parameters :
 
 You can customize the emulator using the following flags :
 
-```bash
+```
 $ ./chip-go-8 --help
 Usage of ./chip-go-8:
   -mute
@@ -61,7 +58,6 @@ So for example `./chip-go-8 -ratio 15 -rom path/to/file.c8 -mute` will run the e
 Feel free to try `./chip-go-8 -test`, it will run a special test image to assert that all opcodes are correctly implemented !
 
 ## Keyboard controls
-====================
 
 > The computers which originally used the Chip-8 Language had a 16-key hexadecimal keypad with the following layout: *[original content](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#keyboard)*
 
@@ -82,14 +78,13 @@ W | X | C | V
 ```
 
 ## Where to find roms
-=====================
 
 You can find pretty cool roms right [here](https://github.com/dmatlack/chip8) ! You just need to download one of them, pass it to chip-go-8 and you're ready to go !
 
 ## References
-=============
 
-* [Github page of the opcode test image](https://github.com/corax89/chip8-test-rom)
+* [Wikipedia's Chip8 page](https://en.wikipedia.org/wiki/CHIP-8)
 * [Chip8 technical reference v1.0](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)
 * [How to write a Chip8 emulator](http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/)
 * [SDL library documentation](https://wiki.libsdl.org/APIByCategory)
+* [Github page of the opcode test image](https://github.com/corax89/chip8-test-rom)
