@@ -9,10 +9,10 @@ import (
 )
 
 func main() {
-	ratio := flag.Int("ratio", 20, "The ratio of the screen. The screen is 64x32. Default value is 20")
+	ratio := flag.Int("ratio", 20, "The ratio of the screen. The screen standard size is 64x32.")
 	isMuted := flag.Bool("mute", false, "The emulator will be muted if set.")
 	runTest := flag.Bool("test", false, "If set, the emulator will boot with the test chip8 image from https://github.com/corax89/chip8-test-rom")
-	romFile := flag.String("rom", "rom/pong.c8", "Specify a rom file to run. If not set, a pong image wille be loaded")
+	romFile := flag.String("rom", "rom/pong.c8", "Specify a rom file to run. If not set, a pong image will be loaded")
 	flag.Parse()
 
 	chip8ScreenSDL := screen.NewChip8ScreenSDL(64, 32, int32(*ratio))
